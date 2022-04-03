@@ -22,7 +22,7 @@ object Service {
             if (!chats.containsKey(id)) {
                 chats[id] = mutableListOf()
                 chats[id]?.size?.let { message.createId(it) }
-                chats[id]?.add(message)
+                chats[id]?.add(message1)
             } else {
                 chats[id]?.size?.let { message.createId(it) }
                 chats[id]?.add(message)
