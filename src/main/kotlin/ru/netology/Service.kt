@@ -22,7 +22,7 @@ object Service {
             if (!chats.containsKey(id)) {
                 chats[id] = mutableListOf()
                 chats[id]?.size?.let { message.createId(it) }
-                chats[id]?.add(message1)
+                chats[id]?.add(message)
             } else {
                 chats[id]?.size?.let { message.createId(it) }
                 chats[id]?.add(message)
@@ -74,14 +74,13 @@ object Service {
                 val index = chats[id]?.indexOfFirst { it.id == messageId }
                 if (index != null && index >= 0) {
                     if (chats[id]!!.size >= count) {
-                      val subChat = index?.let {
+                      val subChat = index.let {
                         chats[id]?.subList(it, index + count).also { it?.forEach { it.read = true } }
                      }
                       return subChat
                    } else throw Error()
                 } else throw WrongIdException()
         } else throw WrongIdException()
-        return null
     }
 
     fun countNew(userId: Int): Int? {
