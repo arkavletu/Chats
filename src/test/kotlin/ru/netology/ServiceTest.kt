@@ -53,7 +53,6 @@ internal class ServiceTest {
     @Test(expected = WrongIdException::class)
     fun createThrowException() {
         Service.create(2,Message(1,"Hi"))
-        assertTrue(Service.chats.isNotEmpty())
     }
 
     @Test
@@ -121,8 +120,8 @@ internal class ServiceTest {
         val user2 = Service.newUser(2)
         Service.create(2,Message(1,"Hi"))
         Service.create(2,Message(1,"Where R U?"))
-        val result = Service.getChat(2,1,2)?.size
-        assertEquals(2,result)
+        val result = Service.getChat(1,2,1, 2)
+        assertNotNull(result)
     }
 
     @Test(expected = WrongIdException::class)
@@ -131,7 +130,7 @@ internal class ServiceTest {
         val user2 = Service.newUser(2)
         Service.create(2,Message(1,"Hi"))
         Service.create(2,Message(1,"Where R U?"))
-        Service.getChat(5,1,2)
+        Service.getChat(1,5,1,2)
     }
 
     @Test(expected = Error::class)
@@ -140,7 +139,7 @@ internal class ServiceTest {
         val user2 = Service.newUser(2)
         Service.create(2,Message(1,"Hi"))
         Service.create(2,Message(1,"Where R U?"))
-        Service.getChat(2,1,7)
+        Service.getChat(1,2,1, 7)
     }
 
     @Test

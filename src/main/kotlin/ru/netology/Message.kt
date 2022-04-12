@@ -15,6 +15,6 @@ data class Message(
     }
 
     override fun toString(): String {
-        return "\nMessage id $id from $ownerId\n$text\n$time"
+        return "\nMessage from $ownerId\n$text\n$time"
     }
 }

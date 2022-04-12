@@ -19,14 +19,16 @@ object Service {
 
     fun create(id: Int, message: Message) {
         if (users.contains(findById(id)) && users.contains(findById(message.ownerId))) {
-            if (!chats.containsKey(id)) {
-                chats[id] = mutableListOf()
-                chats[id]?.size?.let { message.createId(it) }
-                chats[id]?.add(message)
+            if(chats.containsKey(message.ownerId) && chats.containsKey(id)) {
+                chats[id]?.size?.let { message.createId(it) }.also { chats[id]?.add(message) }
+                chats[message.ownerId]?.size?.let { message.createId(it) }.also { chats[message.ownerId]?.add(message) }
             } else {
-                chats[id]?.size?.let { message.createId(it) }
-                chats[id]?.add(message)
+                chats[id] = mutableListOf()
+                chats[message.ownerId] = mutableListOf()
+                chats[id]?.size?.let { message.createId(it) }.also { chats[id]?.add(message) }
+                chats[message.ownerId]?.size?.let { message.createId(it) }.also { chats[message.ownerId]?.add(message) }
             }
+
         } else throw WrongIdException()
 
     }
@@ -35,19 +37,13 @@ object Service {
         chats.remove(id)
     }
 
-    fun getAllChats(userId: Int): StringBuilder {
-        if (users.contains(findById(userId))) {
-            val index: Int = users.indexOf(findById(userId))
-            val result = StringBuilder()
-            if (users[index].userChats.isNotEmpty()) {
-                for (entry in users[index].userChats) {
-                    result.append("Chat with user ${entry.key}\nLast message ${entry.value.last()}")
-                    if (entry.value.isEmpty()) result.append("Chat with user ${entry.key}\nNo messages")
-                }
-            }
-
-            return result
-        } else throw WrongIdException()
+    fun getAllChats(userId: Int): String {
+        val result: String = findById(userId)?.userChats?.
+        map { it.key to it.value.last() }?.
+        let {it.joinToString {
+            "\nChat with id ${it.first}\n${it.second}\n"
+        } } ?: throw WrongIdException()
+        return result
     }
 
     fun edit(id: Int, messageId: Int, message: Message) {
@@ -68,25 +64,29 @@ object Service {
         } else throw WrongIdException()
     }
 
-    fun getChat(id: Int, messageId: Int, count: Int): MutableList<Message>? {
-        if (users.contains(findById(id))) {
+    fun getChat(ownerId: Int, chatId: Int, messageId: Int, count: Int): String? { // sequence
+       val owner = findById(ownerId)?: throw WrongIdException()
 
-                val index = chats[id]?.indexOfFirst { it.id == messageId }
-                if (index != null && index >= 0) {
-                    if (chats[id]!!.size >= count) {
-                      val subChat = index.let {
-                        chats[id]?.subList(it, index + count).also { it?.forEach { it.read = true } }
-                     }
-                      return subChat
-                   } else throw Error()
-                } else throw WrongIdException()
-        } else throw WrongIdException()
+
+//        if (users.contains(findById(id))) {
+//
+//                val index = chats[id]?.indexOfFirst { it.id == messageId }
+//                if (index != null && index >= 0) {
+//                    if (chats[id]!!.size >= count) {
+//                      val subChat = index.let {
+//                        chats[id]?.subList(it, index + count). }
+//                     }
+//                      return subChat
+//                   } else throw Error()
+//                } else throw WrongIdException()
+//        } else throw WrongIdException()
+      return null
     }
 
-    fun countNew(userId: Int): Int? {
-        if (users.contains(findById(userId))) {
-            return findById(userId)?.userChats?.count { it.value.any { !it.read && it.ownerId != userId } }
-        } else throw WrongIdException()
+    fun countNew(userId: Int): Int {
+        return findById(userId)?.userChats?.asSequence()?.count {
+            it.value.any { !it.read && it.ownerId != userId }
+        }?: throw WrongIdException()
     }
 
     fun emptySingleton() {
