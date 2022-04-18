@@ -11,7 +11,7 @@ data class Message(
     var read: Boolean = false
     var id: Int = 0
     fun createId(size: Int) {
-        this.id = size + 1
+        this.id = size
     }
 
     override fun toString(): String {

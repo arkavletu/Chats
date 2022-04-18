@@ -11,7 +11,7 @@ fun main(){
     Service.create(2,Message(1,"Hi"))
     Service.create(1,Message(2,"HAU?"))
     Service.create(3,Message(1,"I'm here"))
-    println(Service.getChat(1,2,2,1))
+
 }
 
 
