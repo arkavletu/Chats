@@ -5,16 +5,17 @@ data class User(
 
 
     ) {
-    val userChats: MutableMap<Int, MutableList<Message>>
+    val userChats: Sequence<Map.Entry<Pair<Int,Int>, MutableList<Message>>>
         get() {
-            return Service.chats.filter { it.key == this.id || it.value.any { it.ownerId == this.id } }
-                    as MutableMap<Int, MutableList<Message>>
+            return Service.chats.asSequence().filter { it.key.second == id }
         }
+
 
     override fun toString(): String {
         return "user id $id"
     }
 
 }
+
 
 

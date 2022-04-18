@@ -2,8 +2,8 @@ package ru.netology
 
 
 object Service {
-    val chats: MutableMap<Int, MutableList<Message>> = mutableMapOf()
-    val users: MutableList<User> = mutableListOf()
+    val chats: MutableMap<Pair<Int, Int>, MutableList<Message>> = mutableMapOf()
+    var users: Sequence<User> = sequenceOf()
 
 
     fun newUser(id: Int): User {
@@ -17,81 +17,76 @@ object Service {
     }
 
 
-    fun create(id: Int, message: Message) {
+    fun create(id: Int, message: Message) { //создаю 2 одинаковых чата, иначе у меня никак не пишется фильтрация..
+        val created: Boolean
         if (users.contains(findById(id)) && users.contains(findById(message.ownerId))) {
-            if (!chats.containsKey(id)) {
-                chats[id] = mutableListOf()
-                chats[id]?.size?.let { message.createId(it) }
-                chats[id]?.add(message)
-            } else {
-                chats[id]?.size?.let { message.createId(it) }
-                chats[id]?.add(message)
-            }
-        } else throw WrongIdException()
+            chats.putIfAbsent(Pair(id, message.ownerId), mutableListOf())
+            chats.putIfAbsent(Pair(message.ownerId, id), mutableListOf())
+            chats[Pair(id, message.ownerId)]?.plusAssign(message)
+                .also { message.createId(chats[Pair(id, message.ownerId)]!!.size) }
+            chats[Pair(message.ownerId, id)]?.plusAssign(message)
+                .also { message.createId(chats[Pair(id, message.ownerId)]!!.size) }
+            created = true
+        } else created = false
 
+        if (!created) throw WrongIdException()
     }
 
-    fun delete(id: Int) {
-        chats.remove(id)
+    fun delete(ownerId: Int, id: Int) {
+        chats.remove(Pair(ownerId, id))
+        chats.remove(Pair(id, ownerId))
     }
 
-    fun getAllChats(userId: Int): StringBuilder {
-        if (users.contains(findById(userId))) {
-            val index: Int = users.indexOf(findById(userId))
-            val result = StringBuilder()
-            if (users[index].userChats.isNotEmpty()) {
-                for (entry in users[index].userChats) {
-                    result.append("Chat with user ${entry.key}\nLast message ${entry.value.last()}")
-                    if (entry.value.isEmpty()) result.append("Chat with user ${entry.key}\nNo messages")
-                }
-            }
-
-            return result
-        } else throw WrongIdException()
+    fun getAllChats(userId: Int): String {
+        val oops = "No messages"
+        val result: String = findById(userId)?.userChats?.map { it.key to it.value.last() }?.let {
+            it.joinToString {
+                "\nChat with id ${it.first.second}\n${it.second}\n"
+            }.ifEmpty { oops }
+        } ?: throw WrongIdException()
+        return result
     }
 
     fun edit(id: Int, messageId: Int, message: Message) {
-        val index: Int? = chats[id]?.indexOfFirst { it.id == messageId }
+        val index: Int? = chats[Pair(id, message.ownerId)]?.indexOfFirst { it.id == messageId }
         if (index != null && index >= 0) {
-            val initialMessage: Message = chats[id]!!.get(index) // до проверки не дойдет)
+            val initialMessage: Message = chats[Pair(id, message.ownerId)]!!.get(index) // до проверки не дойдет)
             message.id = messageId
             message.ownerId = initialMessage.ownerId
-            chats[id]?.set(index, message)
+            chats[Pair(id, message.ownerId)]?.set(index, message)
+            chats[Pair(message.ownerId, id)]?.set(index, message)
         } else throw WrongIdException()
     }
 
-    fun deleteMessage(id: Int, messageId: Int) {
-        val index: Int? = chats[id]?.indexOfFirst { it.id == messageId }
+    fun deleteMessage(ownerId: Int, id: Int, messageId: Int) {
+        val index: Int? = chats[Pair(id, ownerId)]?.indexOfFirst { it.id == messageId }
         if (index != null && index >= 0) {
-            chats[id]?.removeAt(index)
-            if (chats[id]?.isEmpty() == true) delete(id)
+            chats[Pair(id, messageId)]?.removeAt(index)
+            chats[Pair(messageId, id)]?.removeAt(index)
+            if (chats[Pair(id, ownerId)]?.isEmpty() == true && chats[Pair(ownerId, id)]?.isEmpty() == true) delete(
+                ownerId,
+                id)
         } else throw WrongIdException()
     }
 
-    fun getChat(id: Int, messageId: Int, count: Int): MutableList<Message>? {
-        if (users.contains(findById(id))) {
-
-                val index = chats[id]?.indexOfFirst { it.id == messageId }
-                if (index != null && index >= 0) {
-                    if (chats[id]!!.size >= count) {
-                      val subChat = index.let {
-                        chats[id]?.subList(it, index + count).also { it?.forEach { it.read = true } }
-                     }
-                      return subChat
-                   } else throw Error()
-                } else throw WrongIdException()
-        } else throw WrongIdException()
+    fun getChat(ownerId: Int, id: Int, messageId: Int, count: Int): String {
+        val owner = findById(ownerId) ?: throw WrongIdException()
+        var x = sequenceOf<Message>()
+        val empty = "No messages"
+        owner.userChats.filter { it.key.first == id }.forEach { x += it.value }
+        return x.filter { it.id >= messageId }.take(count).onEach { it.read = true }.joinToString { "$it" }
+            .ifEmpty { empty }
     }
 
-    fun countNew(userId: Int): Int? {
-        if (users.contains(findById(userId))) {
-            return findById(userId)?.userChats?.count { it.value.any { !it.read && it.ownerId != userId } }
-        } else throw WrongIdException()
+    fun countNew(userId: Int): Int {
+        return findById(userId)?.userChats?.asSequence()?.count {
+            it.value.any { !it.read && it.ownerId != userId }
+        } ?: throw WrongIdException()
     }
 
     fun emptySingleton() {
         chats.clear()
-        users.clear()
+        users = emptySequence()
     }
 
 }
