@@ -1,7 +1,7 @@
 package ru.netology
 
 data class User(
-    val id: Int,
+    var id: Int = 0
 
 
     ) {

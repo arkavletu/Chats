@@ -3,39 +3,56 @@ package ru.netology
 
 object Service {
     val chats: MutableMap<Pair<Int, Int>, MutableList<Message>> = mutableMapOf()
-    var users: Sequence<User> = sequenceOf()
+    var users: MutableList<User> = mutableListOf()
 
 
-    fun newUser(id: Int): User {
-        val user = User(id)
+    fun createId(size: Int): Int {
+        return size
+    }
+
+
+    fun newUser(): User {
+        val user = User()
         users += user
+        user.id = createId(users.size)
         return user
     }
 
-    fun findById(id: Int): User? {
-        return users.firstOrNull { it.id == id }
+    fun findUserById(id: Int): User? {
+        return users.find { it.id == id }
+    }
+    fun createMessage(recipientId: Int, message: Message) {
+        if (users.any { it.id == recipientId } && users.any { it.id == message.ownerId }) {
+            chats.getOrPut(recipientId) { mutableListOf() }
+            val chat = chats[recipientId] ?: throw WrongIdOfChatException
+
+            chat.add(message)
+            message.id = createId(chat.size)
+        } else throw WrongIdOfUserException
+
     }
 
 
-    fun create(id: Int, message: Message) { //создаю 2 одинаковых чата, иначе у меня никак не пишется фильтрация..
-        val created: Boolean
-        if (users.contains(findById(id)) && users.contains(findById(message.ownerId))) {
-            chats.putIfAbsent(Pair(id, message.ownerId), mutableListOf())
-            chats.putIfAbsent(Pair(message.ownerId, id), mutableListOf())
-            chats[Pair(id, message.ownerId)]?.plusAssign(message)
-                .also { message.createId(chats[Pair(id, message.ownerId)]!!.size) }
-            chats[Pair(message.ownerId, id)]?.plusAssign(message)
-                .also { message.createId(chats[Pair(id, message.ownerId)]!!.size) }
-            created = true
-        } else created = false
 
-        if (!created) throw WrongIdException()
-    }
+//    fun create(id: Int, message: Message) { //создаю 2 одинаковых чата, иначе у меня никак не пишется фильтрация..
+//        val created: Boolean
+//        if (users.contains(findById(id)) && users.contains(findById(message.ownerId))) {
+//            chats.putIfAbsent(Pair(id, message.ownerId), mutableListOf())
+//            chats.putIfAbsent(Pair(message.ownerId, id), mutableListOf())
+//            chats[Pair(id, message.ownerId)]?.plusAssign(message)
+//                .also { message.createId(chats[Pair(id, message.ownerId)]!!.size) }
+//            chats[Pair(message.ownerId, id)]?.plusAssign(message)
+//                .also { message.createId(chats[Pair(id, message.ownerId)]!!.size) }
+//            created = true
+//        } else created = false
+//
+//        if (!created) throw WrongIdException()
+//    }
 
-    fun delete(ownerId: Int, id: Int) {
-        chats.remove(Pair(ownerId, id))
-        chats.remove(Pair(id, ownerId))
-    }
+//    fun delete(ownerId: Int, id: Int) {
+//        chats.remove(Pair(ownerId, id))
+//        chats.remove(Pair(id, ownerId))
+//    }
 
     fun getAllChats(userId: Int): String {
         val oops = "No messages"
@@ -84,9 +101,9 @@ object Service {
         } ?: throw WrongIdException()
     }
 
-    fun emptySingleton() {
+    fun clearSingleton() {
         chats.clear()
-        users = emptySequence()
+        users.clear()
     }
 
 }

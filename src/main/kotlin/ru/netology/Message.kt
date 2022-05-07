@@ -10,9 +10,9 @@ data class Message(
     ) {
     var read: Boolean = false
     var id: Int = 0
-    fun createId(size: Int) {
-        this.id = size
-    }
+//    fun createId(size: Int) {
+//        this.id = size
+//    }
 
     override fun toString(): String {
         return "\nMessage from $ownerId\n$text\n$time"
