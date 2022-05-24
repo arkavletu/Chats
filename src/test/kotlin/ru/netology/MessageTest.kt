@@ -6,54 +6,62 @@ import org.junit.Test
 
 internal class MessageTest {
     @Before
-    fun start(){
+    fun start() {
         Service.clearSingleton()
     }
 
     @Test
-    fun create() {
+    fun createMessageAndChat() {
         val user1 = Service.newUser()
         val user2 = Service.newUser()
-        Service.createMessage(2,Message(1,"Hi"))
-        assertTrue(Service.chats.isNotEmpty())
+        val message = Message(user2.id, "Hi")
+        Service.createMessage(user1.id, message)
+        val chat = Service.chats[user1.id]
+        assertTrue(Service.chats.containsKey(user1.id))
+        assertTrue(chat?.isNotEmpty() == true)
+        assertTrue(message.id.value > 0)
     }
 
     @Test
-    fun createIfContains() {
+    fun createMessageInExistingChat() {
         val user1 = Service.newUser()
         val user2 = Service.newUser()
-        Service.createMessage(2,Message(1,"Hi"))
-        Service.createMessage(2,Message(1,"Where R U?"))
-        assertTrue(Service.chats[2]?.size == 2)
+        Service.createMessage(user2.id, Message(user1.id, "Hi"))
+        Service.createMessage(user2.id, Message(user1.id, "Where R U?"))
+        assertTrue(Service.chats[user2.id]?.size == 2)
     }
 
     @Test(expected = WrongIdOfUserException::class)
-    fun createThrowException() {
-        Service.createMessage(2,Message(1,"Hi"))
+    fun createMessageThrowException() {
+        Service.createMessage(User.ID(1), Message(User.ID(2), "Hi"))
     }
 
     @Test
     fun deleteMessage() {
         val user1 = Service.newUser()
         val user2 = Service.newUser()
-        Service.createMessage(2,Message(1,"Hi"))
-        Service.deleteMessage(2, 1)
-        assertFalse(Service.chats.contains(2))
+        val message = Message(user2.id, "Hi")
+        Service.createMessage(user1.id, message)
+        Service.deleteMessage(user1.id, message.id)
+        assertFalse(Service.chats.contains(user1.id))
     }
 
     @Test(expected = WrongIdOfChatException::class)
-    fun deleteMessageChatException(){
+    fun deleteMessageChatException() {
         val user1 = Service.newUser()
         val user2 = Service.newUser()
-        Service.deleteMessage(4, 1)
+        val message = Message(user2.id, "Hi")
+        Service.createMessage(user1.id, message)
+        Service.deleteMessage(User.ID(4), Message.ID(1))
     }
 
     @Test(expected = WrongIdOfMessageException::class)
-    fun deleteMessageIdException(){
+    fun deleteMessageIdException() {
         val user1 = Service.newUser()
         val user2 = Service.newUser()
-        Service.createMessage(2,Message(1,"Hi"))
-        Service.deleteMessage(2, 2)
+        val message = Message(user2.id, "Hi")
+        Service.createMessage(user1.id, message)
+        Service.deleteMessage(user1.id, Message.ID(4))
     }
 
 
@@ -61,17 +69,19 @@ internal class MessageTest {
     fun edit() {
         val user1 = Service.newUser()
         val user2 = Service.newUser()
-        Service.createMessage(2,Message(1,"Hi"))
-        Service.editMessage(2,1,Message(1,"Bye"))
-        assertEquals("Bye", Service.chats[2]?.get(0)?.text)
+        val message = Message(user2.id, "Hi")
+        Service.createMessage(user1.id, message)
+        Service.editMessage(user1.id, message.id, Message(user2.id, "Bye"))
+        assertEquals("Bye", Service.chats[user1.id]?.get(0)?.text)
     }
 
     @Test(expected = WrongIdOfChatException::class)
     fun editException() {
         val user1 = Service.newUser()
         val user2 = Service.newUser()
-        Service.createMessage(2,Message(1,"Hi"))
-        Service.editMessage(5,1,Message(1,"Bye"))
+        val message = Message(user2.id, "Hi")
+        Service.createMessage(user1.id, message)
+        Service.editMessage(User.ID(5), message.id, Message(user1.id, "Bye"))
     }
 
 }

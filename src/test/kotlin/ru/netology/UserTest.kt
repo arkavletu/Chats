@@ -20,16 +20,14 @@ internal class UserTest {
     @Test
     fun findById() {
         val user1 = Service.newUser()
-        val user2 = Service.newUser()
-        val result = Service.findUserById(1)
+        val result = Service.findUserById(user1.id)
         assertNotNull(result)
     }
 
     @Test
     fun findByIdNull() {
         val user1 = Service.newUser()
-        val user2 = Service.newUser()
-        val result = Service.findUserById(3)
+        val result = Service.findUserById(User.ID(0))
         assertNull(result)
     }
 

@@ -1,94 +1,70 @@
 package ru.netology
 
 object Service {
-    val chats: MutableMap<Int, MutableList<Message>> = mutableMapOf()
+    val chats: MutableMap<User.ID, MutableList<Message>> = mutableMapOf()
     val users: MutableList<User> = mutableListOf()
-
-    fun createId(size: Int): Int {
-        return size
-    }
 
 
     fun newUser(): User {
         val user = User()
-        users += user
-        user.id = createId(users.size)
+        if(users.none{it.id == user.id}) users += user else throw WrongIdOfUserException
         return user
     }
 
-    fun findUserById(id: Int): User? {
-        return users.find { it.id == id }
+    fun findUserById(UserId: User.ID): User? {
+        return users.find { it.id == UserId }
     }
 
 
-    fun createMessage(recipientId: Int, message: Message) {
+    fun createMessage(recipientId: User.ID, message: Message) {
         if (users.any { it.id == recipientId } && users.any { it.id == message.ownerId }) {
-            chats.getOrPut(recipientId) { mutableListOf() }
-            val chat = chats[recipientId] ?: throw WrongIdOfChatException
-
-            chat.add(message)
-            message.id = createId(chat.size)
+            val chat =  chats.getOrPut(recipientId) { mutableListOf() }
+            chat += message
         } else throw WrongIdOfUserException
 
     }
 
-    fun deleteChat(chatId: Int) {
+    fun deleteChat(chatId: User.ID) {
         chats.remove(chatId)
     }
 
 
-    fun getAllChats(userId: Int): Map<Int, MutableList<Message>> {
+    fun getAllChats(userId: User.ID): Map<User.ID, MutableList<Message>> {
         val user = findUserById(userId) ?: throw WrongIdOfUserException
-        val userChats = chats.filter { it.key == userId || it.value.any { it.ownerId == userId } }
+        val userChats = chats.filter { (senderId, messages) -> senderId == userId ||
+                messages.any { it.ownerId == userId } }
         return userChats
     }
 
-    fun printAllChats(userId: Int): StringBuilder {
-        val chats = getAllChats(userId)
-        val result = StringBuilder()
-        for (entry in chats) {
-            result.append("Chat with user ${entry.key}\n${entry.value.last()}")
-        }// не стала добавлять сообщение, что чат пуст - не вижу возможности создать пустой чат.
-        return result
+    fun editMessage(UserId: User.ID, messageToEditId: Message.ID, messageNew: Message) {
+        //сообщение полностью заменяется на новое, поэтому id старого отдельно
+        val chat: MutableList<Message> = chats[UserId] ?: throw WrongIdOfChatException
+        val messageIndex = chat.indexOf(chat.find { it.id == messageToEditId })
+        if (messageIndex >= 0) chat[messageIndex] = messageNew
     }
 
-    fun editMessage(chatId: Int, messageId: Int, message: Message) {
-        val chat: MutableList<Message> = chats[chatId] ?: throw WrongIdOfChatException
-        val messageIndex = chat.indexOf(chat.find { it.id == messageId })
-        if (messageIndex >= 0) chat[messageIndex] = message
-        chat.size.let { createId(it) }
-    }
-
-    fun deleteMessage(chatId: Int, messageId: Int) {
+    fun deleteMessage(chatId: User.ID, messageId: Message.ID) {
         val chat = chats[chatId] ?: throw WrongIdOfChatException
         val index = chat.indexOfFirst { it.id == messageId }
-        if (index >= 0) {
-            chat.removeAt(index)
-            if (chat.isEmpty()) deleteChat(chatId)
-        } else throw WrongIdOfMessageException
+        if (index < 0) throw WrongIdOfMessageException
+        chat.removeAt(index)
+        if (chat.isEmpty()) deleteChat(chatId)
+
     }
 
-    fun getChat(chatId: Int, messageId: Int, count: Int): MutableList<Message> {// падает если count больше size
+    fun getChat(chatId: User.ID, startMessageId: Message.ID, count: Int): MutableList<Message> {
         val subChat: MutableList<Message>
-        if (users.any { it.id == chatId }) {
-            val chat = chats[chatId] ?: throw WrongIdOfChatException
-            val index = chat.indexOfFirst { it.id == messageId }
-            if (index >= 0) {
-                if (count > chat.size) {
-                    subChat = index.let {
-                        chat.subList(it, chat.size).also { it.forEach { it.read = true } }
-                    }
-                } else {
-                    subChat = index.let {
-                        chat.subList(it, index + count).also { it.forEach { it.read = true } }
-                    }
-                }
-            } else throw WrongIdOfMessageException
-        } else throw WrongIdOfUserException
+        if (users.none { it.id == chatId }) throw WrongIdOfUserException
+        val chat = chats[chatId] ?: throw WrongIdOfChatException
+        val startMessage = chat.find { it.id == startMessageId } ?: throw WrongIdOfMessageException
+        val startIndex = chat.indexOf(startMessage)
+        val endIndex = if (count > chat.size) chat.lastIndex else startIndex + count
+        subChat = startIndex.let{chat.subList(it, endIndex)}.onEach { it.read = true }
+        //если одно сообщение в чате, то count>size=>пустой чат
         return subChat
     }
 
-    fun countUnreadChats(userId: Int): Int {
+    fun countUnreadChats(userId: User.ID): Int {
         val count: Int = if (users.any { it.id == userId })
             getAllChats(userId).count { it.value.any { !it.read && it.ownerId != userId } }
         else throw WrongIdOfUserException

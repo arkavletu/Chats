@@ -15,33 +15,35 @@ internal class ChatTest {
     fun getAllChats() {
         val user1 = Service.newUser()
         val user2 = Service.newUser()
-        Service.createMessage(2,Message(1,"Hi"))
-        assertTrue(Service.getAllChats(1).isNotEmpty())
+        Service.createMessage(user1.id,Message(user2.id,"Hi"))
+        assertTrue(Service.getAllChats(user1.id).isNotEmpty())
+        assertTrue(Service.getAllChats(user2.id).isNotEmpty())
+
     }
 
     @Test(expected = WrongIdOfUserException::class)
     fun getAllChatsException() {
         val user1 = Service.newUser()
         val user2 = Service.newUser()
-        Service.createMessage(2,Message(1,"Hi"))
-        Service.getAllChats(3)
+        Service.createMessage(user1.id,Message(user2.id,"Hi"))
+        Service.getAllChats(User.ID(0))
     }
 
     @Test
     fun getChat() {
         val user1 = Service.newUser()
         val user2 = Service.newUser()
-        Service.createMessage(2,Message(1,"Hi"))
-        Service.createMessage(2,Message(1,"Where R U?"))
-        val result = Service.getChat(2,1,2).size
-        assertEquals(2, result)
+        Service.createMessage(user1.id,Message(user2.id,"Hi"))
+        Service.createMessage(user2.id,Message(user1.id ,"Where R U?"))
+        val result = Service.getChat(user1.id,Message.ID(1),1).size
+        assertEquals(1, result)
     }
 
     @Test(expected = WrongIdOfUserException::class)
     fun getChatUserException() {
         val user1 = Service.newUser()
         val user2 = Service.newUser()
-        Service.getChat(5,1,2)
+        Service.getChat(User.ID(5),Message.ID(1),2)
     }
 
     @Test(expected = WrongIdOfChatException::class)
@@ -49,37 +51,37 @@ internal class ChatTest {
         val user1 = Service.newUser()
         val user2 = Service.newUser()
         val user3 = Service.newUser()
-        Service.createMessage(2,Message(1,"Hi"))
-        Service.createMessage(2,Message(1,"Where R U?"))
-        Service.getChat(3,1,7)
+        Service.createMessage(user1.id,Message(user2.id,"Hi"))
+        Service.createMessage(user2.id,Message(user1.id ,"Where R U?"))
+        Service.getChat(user3.id, Message.ID(1),7)
     }
 
     @Test(expected = WrongIdOfMessageException::class)
     fun getChatMessageException() {
         val user1 = Service.newUser()
         val user2 = Service.newUser()
-        Service.createMessage(2,Message(1,"Hi"))
-        Service.createMessage(2,Message(1,"Where R U?"))
-        Service.getChat(2,4,1)
+        Service.createMessage(user1.id,Message(user2.id,"Hi"))
+        Service.createMessage(user2.id,Message(user1.id ,"Where R U?"))
+        Service.getChat(user1.id,Message.ID(4),1)
     }
 
     @Test
     fun countNew() {
         val user1 = Service.newUser()
         val user2 = Service.newUser()
-        Service.createMessage(2,Message(1,"Hi"))
-        val resultForUser1 = Service.countUnreadChats(1)
-        val resultForUser2 = Service.countUnreadChats(2)
-        assertTrue(resultForUser1 == 0)
-        assertTrue(resultForUser2 == 1)
+        Service.createMessage(user1.id,Message(user2.id,"Hi"))
+        val resultForUser1 = Service.countUnreadChats(user1.id)
+        val resultForUser2 = Service.countUnreadChats(user2.id)
+        assertTrue(resultForUser1 == 1)
+        assertTrue(resultForUser2 == 0)
     }
 
     @Test(expected = WrongIdOfUserException::class)
     fun countNewException(){
         val user1 = Service.newUser()
         val user2 = Service.newUser()
-        Service.createMessage(2,Message(1,"Hi"))
-        Service.countUnreadChats(3)
+        Service.createMessage(user1.id,Message(user2.id,"Hi"))
+        Service.countUnreadChats(User.ID(3))
     }
 
 }
