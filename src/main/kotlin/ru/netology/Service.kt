@@ -1,7 +1,7 @@
 package ru.netology
 
 object Service {
-    val chats: MutableMap<User.ID, MutableList<Message>> = mutableMapOf()// а можно сделать pair из двух User.ID?
+    val chats: MutableMap<Pair<User.ID, User.ID>, MutableList<Message>> = mutableMapOf()//сначала адресат, потом автор
     val users: MutableList<User> = mutableListOf()
 
 
@@ -17,49 +17,53 @@ object Service {
 
 
     fun createMessage(recipientId: User.ID, message: Message) {
+
         if (users.any { it.id == recipientId } && users.any { it.id == message.ownerId }) {
-            val chat =  chats.getOrPut(recipientId) { mutableListOf() }
+            val chat =  chats.getOrPut(Pair(recipientId, message.ownerId)) { mutableListOf() }
+            val possibleId = chat.size + 1
+            message.id = Message.ID(if(chat.any { it.id.value == possibleId }) possibleId + 1 else possibleId)
             chat += message
         } else throw WrongIdOfUserException
 
     }
 
-    fun deleteChat(chatId: User.ID) {
+    fun deleteChat(chatId: Pair<User.ID, User.ID>) {
         chats.remove(chatId)
     }
 
 
-    fun getAllChats(userId: User.ID): Map<User.ID, MutableList<Message>> {
+    fun getAllChats(userId: User.ID): Map<Pair<User.ID, User.ID>, MutableList<Message>> {
         val user = findUserById(userId) ?: throw WrongIdOfUserException
-        val userChats = chats.filter { (senderId, messages) -> senderId == userId ||
-                messages.any { it.ownerId == userId } }
+        val userChats = chats.filter { it.key.first == userId || it.key.second == userId }
         return userChats
     }
 
-    fun editMessage(UserId: User.ID, messageToEditId: Message.ID, messageNew: Message) {
+    fun editMessage(recipientId: User.ID, authorId: User.ID, messageToEditId: Message.ID, messageNew: Message) {
         //сообщение полностью заменяется на новое, поэтому id старого отдельно
-        val chat: MutableList<Message> = chats[UserId] ?: throw WrongIdOfChatException
-        val messageIndex = chat.indexOf(chat.find { it.id == messageToEditId })
+        val key = Pair(recipientId, authorId)
+        val chat = chats[key] ?: throw WrongIdOfChatException
+        val oldMessage = chat.find { it.id == messageToEditId }
+        val messageIndex = chat.indexOf(oldMessage)
         if (messageIndex >= 0) chat[messageIndex] = messageNew
     }
 
-    fun deleteMessage(chatId: User.ID, messageId: Message.ID) {
-        val chat = chats[chatId] ?: throw WrongIdOfChatException
+    fun deleteMessage( recipientId: User.ID, authorId: User.ID, messageId: Message.ID) {
+        val key = Pair(recipientId, authorId)
+        val chat = chats[key] ?: throw WrongIdOfChatException
         val index = chat.indexOfFirst { it.id == messageId }
         if (index < 0) throw WrongIdOfMessageException
         chat.removeAt(index)
-        if (chat.isEmpty()) deleteChat(chatId)
+        if (chat.isEmpty()) deleteChat(key)
 
     }
 
-    fun getChat(chatId: User.ID, startMessageId: Message.ID, count: Int): MutableList<Message> {
-        if (users.none { it.id == chatId }) throw WrongIdOfUserException
-        val chat = chats[chatId] ?: throw WrongIdOfChatException
+    fun getChat(recipientId: User.ID, authorId: User.ID, startMessageId: Message.ID, count: Int): MutableList<Message> {
+        if (findUserById(recipientId) == null || findUserById(authorId) == null) throw WrongIdOfUserException
+        val key = Pair(recipientId, authorId)
+        val chat = chats[key] ?: throw WrongIdOfChatException
         val startMessage = chat.find { it.id == startMessageId } ?: throw WrongIdOfMessageException
         val startIndex = chat.indexOf(startMessage)
-        val amount = if(count >= chat.size)chat.size else count
-        //если одно сообщение в чате, то count>size=>пустой чат
-       return chat.subList(startIndex,chat.lastIndex).take(amount).onEach { it.read = true } as MutableList<Message>
+        return chat.filter { chat.indexOf(it) >= startIndex }.take(count).onEach { it.read = true } as MutableList<Message>
     }
 
     fun countUnreadChats(userId: User.ID): Int {

@@ -7,12 +7,12 @@ data class Message(
     val text: String,
     val time: LocalDateTime = LocalDateTime.now(),
     var read: Boolean = false,
-    val id: ID = ID()
+
     ) {
+    var id: ID = ID(0)
+
     @JvmInline
-    value class ID(val value: Int = if(Service.users.none { it.id.value == Service.chats.values.size+1})
-        Service.chats.values.size+1
-    else Service.chats.values.size+2)
+    value class ID(val value: Int)
 
     override fun toString(): String {
         return "\nMessage id $id from $ownerId\n$text\n$time"

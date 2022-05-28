@@ -9,7 +9,7 @@ object PrintService {
         }
         println(result)
     }
-    fun printChat(userId: User.ID, messageID: Message.ID,count: Int){
-        println(Service.getChat(userId, messageID, count).toString())
+    fun printChat(authorId: User.ID, recipientId: User.ID, startMessageId: Message.ID, count: Int){
+        println(Service.getChat(authorId, recipientId, startMessageId, count).toString())
     }
 }

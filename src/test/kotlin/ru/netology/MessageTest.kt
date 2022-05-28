@@ -16,8 +16,8 @@ internal class MessageTest {
         val user2 = Service.newUser()
         val message = Message(user2.id, "Hi")
         Service.createMessage(user1.id, message)
-        val chat = Service.chats[user1.id]
-        assertTrue(Service.chats.containsKey(user1.id))
+        val chat = Service.chats[Pair(user1.id,user2.id)]
+        assertTrue(Service.chats.containsKey(Pair(user1.id,user2.id)))
         assertTrue(chat?.isNotEmpty() == true)
         assertTrue(message.id.value > 0)
     }
@@ -28,7 +28,7 @@ internal class MessageTest {
         val user2 = Service.newUser()
         Service.createMessage(user2.id, Message(user1.id, "Hi"))
         Service.createMessage(user2.id, Message(user1.id, "Where R U?"))
-        assertTrue(Service.chats[user2.id]?.size == 2)
+        assertTrue(Service.chats[Pair(user2.id,user1.id)]?.size == 2)
     }
 
     @Test(expected = WrongIdOfUserException::class)
@@ -42,8 +42,8 @@ internal class MessageTest {
         val user2 = Service.newUser()
         val message = Message(user2.id, "Hi")
         Service.createMessage(user1.id, message)
-        Service.deleteMessage(user1.id, message.id)
-        assertFalse(Service.chats.contains(user1.id))
+        Service.deleteMessage(user1.id, user2.id, message.id)
+        assertFalse(Service.chats.contains(Pair(user1.id, user2.id)))
     }
 
     @Test(expected = WrongIdOfChatException::class)
@@ -52,7 +52,7 @@ internal class MessageTest {
         val user2 = Service.newUser()
         val message = Message(user2.id, "Hi")
         Service.createMessage(user1.id, message)
-        Service.deleteMessage(User.ID(4), Message.ID(1))
+        Service.deleteMessage(user1.id,User.ID(4), Message.ID(1))
     }
 
     @Test(expected = WrongIdOfMessageException::class)
@@ -61,7 +61,7 @@ internal class MessageTest {
         val user2 = Service.newUser()
         val message = Message(user2.id, "Hi")
         Service.createMessage(user1.id, message)
-        Service.deleteMessage(user1.id, Message.ID(4))
+        Service.deleteMessage(user1.id, user2.id, Message.ID(4))
     }
 
 
@@ -71,8 +71,8 @@ internal class MessageTest {
         val user2 = Service.newUser()
         val message = Message(user2.id, "Hi")
         Service.createMessage(user1.id, message)
-        Service.editMessage(user1.id, message.id, Message(user2.id, "Bye"))
-        assertEquals("Bye", Service.chats[user1.id]?.get(0)?.text)
+        Service.editMessage(user1.id, user2.id , message.id, Message(user2.id, "Bye"))
+        assertEquals("Bye", Service.chats[Pair(user1.id, user2.id)]?.get(0)?.text)
     }
 
     @Test(expected = WrongIdOfChatException::class)
@@ -81,7 +81,7 @@ internal class MessageTest {
         val user2 = Service.newUser()
         val message = Message(user2.id, "Hi")
         Service.createMessage(user1.id, message)
-        Service.editMessage(User.ID(5), message.id, Message(user1.id, "Bye"))
+        Service.editMessage(user2.id, User.ID(5), message.id, Message(user1.id, "Bye"))
     }
 
 }
