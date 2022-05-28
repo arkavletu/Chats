@@ -33,10 +33,12 @@ internal class ChatTest {
     fun getChat() {
         val user1 = Service.newUser()
         val user2 = Service.newUser()
-        Service.createMessage(user1.id,Message(user2.id,"Hi"))
-        Service.createMessage(user2.id,Message(user1.id ,"Where R U?"))
-        val result = Service.getChat(user1.id,Message.ID(1),1).size
-        assertEquals(1, result)
+        val message = Message(user2.id, "Hi")
+        val message2 = Message(user2.id, "HRU?")
+        Service.createMessage(user1.id,message)
+        Service.createMessage(user1.id,message2)
+        val result = Service.getChat(user1.id,message.id,3).size
+        assertEquals(2, result)
     }
 
     @Test(expected = WrongIdOfUserException::class)

@@ -1,7 +1,7 @@
 package ru.netology
 
 object Service {
-    val chats: MutableMap<User.ID, MutableList<Message>> = mutableMapOf()
+    val chats: MutableMap<User.ID, MutableList<Message>> = mutableMapOf()// а можно сделать pair из двух User.ID?
     val users: MutableList<User> = mutableListOf()
 
 
@@ -53,15 +53,13 @@ object Service {
     }
 
     fun getChat(chatId: User.ID, startMessageId: Message.ID, count: Int): MutableList<Message> {
-        val subChat: MutableList<Message>
         if (users.none { it.id == chatId }) throw WrongIdOfUserException
         val chat = chats[chatId] ?: throw WrongIdOfChatException
         val startMessage = chat.find { it.id == startMessageId } ?: throw WrongIdOfMessageException
         val startIndex = chat.indexOf(startMessage)
-        val endIndex = if (count > chat.size) chat.lastIndex else startIndex + count
-        subChat = startIndex.let{chat.subList(it, endIndex)}.onEach { it.read = true }
+        val amount = if(count >= chat.size)chat.size else count
         //если одно сообщение в чате, то count>size=>пустой чат
-        return subChat
+       return chat.subList(startIndex,chat.lastIndex).take(amount).onEach { it.read = true } as MutableList<Message>
     }
 
     fun countUnreadChats(userId: User.ID): Int {

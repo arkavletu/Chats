@@ -10,7 +10,9 @@ data class Message(
     val id: ID = ID()
     ) {
     @JvmInline
-    value class ID(val value: Int = Service.chats.values.size+1)// не поняла как сделать уникальный id
+    value class ID(val value: Int = if(Service.users.none { it.id.value == Service.chats.values.size+1})
+        Service.chats.values.size+1
+    else Service.chats.values.size+2)
 
     override fun toString(): String {
         return "\nMessage id $id from $ownerId\n$text\n$time"

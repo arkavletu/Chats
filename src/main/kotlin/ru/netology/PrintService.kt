@@ -10,7 +10,6 @@ object PrintService {
         println(result)
     }
     fun printChat(userId: User.ID, messageID: Message.ID,count: Int){
-        val chat = Service.getChat(userId, messageID, count)
-        println(chat.toString())
+        println(Service.getChat(userId, messageID, count).toString())
     }
 }
