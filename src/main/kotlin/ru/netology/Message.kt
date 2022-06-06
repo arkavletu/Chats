@@ -3,18 +3,18 @@ package ru.netology
 import java.time.LocalDateTime
 
 data class Message(
-    var ownerId: Int, // от кого
-    var text: String,
-    var time: LocalDateTime = LocalDateTime.now(),
+    val ownerId: User.ID, // от кого
+    val text: String,
+    val time: LocalDateTime = LocalDateTime.now(),
+    var read: Boolean = false,
 
     ) {
-    var read: Boolean = false
-    var id: Int = 0
-//    fun createId(size: Int) {
-//        this.id = size
-//    }
+    var id: ID = ID(0)
+
+    @JvmInline
+    value class ID(val value: Int)
 
     override fun toString(): String {
-        return "\nMessage from $ownerId\n$text\n$time"
+        return "\nMessage id $id from $ownerId\n$text\n$time"
     }
 }
