@@ -26,7 +26,7 @@ internal class ChatTest {
         val user1 = Service.newUser()
         val user2 = Service.newUser()
         Service.createMessage(user1.id,Message(user2.id,"Hi"))
-        Service.getAllChats(User.ID(0))
+        Service.getAllChats(User.ID(java.util.UUID.randomUUID()))
     }
 
     @Test
@@ -47,7 +47,7 @@ internal class ChatTest {
         val user2 = Service.newUser()
         val message = Message(user2.id, "Hi")
         Service.createMessage(user1.id,message)
-        Service.getChat(User.ID(0),user2.id,message.id,2)
+        Service.getChat(User.ID(java.util.UUID.randomUUID()),user2.id,message.id,2)
     }
 
     @Test(expected = WrongIdOfChatException::class)
@@ -57,7 +57,7 @@ internal class ChatTest {
         val user3 = Service.newUser()
         Service.createMessage(user1.id,Message(user2.id,"Hi"))
         Service.createMessage(user2.id,Message(user1.id ,"Where R U?"))
-        Service.getChat(user3.id,user2.id, Message.ID(1),7)
+        Service.getChat(user3.id,user2.id, Message.ID(java.util.UUID.randomUUID()),7)
     }
 
     @Test(expected = WrongIdOfMessageException::class)
@@ -66,7 +66,7 @@ internal class ChatTest {
         val user2 = Service.newUser()
         Service.createMessage(user1.id,Message(user2.id,"Hi"))
         Service.createMessage(user2.id,Message(user1.id ,"Where R U?"))
-        Service.getChat(user1.id,user2.id,Message.ID(4),1)
+        Service.getChat(user1.id,user2.id,Message.ID(java.util.UUID.randomUUID()),1)
     }
 
     @Test
@@ -85,7 +85,7 @@ internal class ChatTest {
         val user1 = Service.newUser()
         val user2 = Service.newUser()
         Service.createMessage(user1.id,Message(user2.id,"Hi"))
-        Service.countUnreadChats(User.ID(3))
+        Service.countUnreadChats(User.ID(java.util.UUID.randomUUID()))
     }
 
 }

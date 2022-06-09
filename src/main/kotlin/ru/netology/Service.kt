@@ -20,8 +20,6 @@ object Service {
 
         if (users.any { it.id == recipientId } && users.any { it.id == message.ownerId }) {
             val chat =  chats.getOrPut(Pair(recipientId, message.ownerId)) { mutableListOf() }
-            val possibleId = chat.size + 1
-            message.id = Message.ID(if(chat.any { it.id.value == possibleId }) possibleId + 1 else possibleId)
             chat += message
         } else throw WrongIdOfUserException
 

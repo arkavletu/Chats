@@ -27,7 +27,7 @@ internal class UserTest {
     @Test
     fun findByIdNull() {
         val user1 = Service.newUser()
-        val result = Service.findUserById(User.ID(0))
+        val result = Service.findUserById(User.ID(java.util.UUID.randomUUID()))
         assertNull(result)
     }
 
