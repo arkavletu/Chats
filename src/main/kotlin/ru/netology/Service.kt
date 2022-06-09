@@ -2,8 +2,7 @@ package ru.netology
 
 
 object Service {
-    val chats: MutableList<Chat> = mutableListOf()
-    //MutableMap<Pair<User.ID, User.ID>, MutableList<Message>> = mutableMapOf()//сначала адресат, потом автор
+    val chats: MutableMap<Chat.ID, Chat> = mutableMapOf()
     var users: MutableList<User> = mutableListOf()
 
 
@@ -37,15 +36,14 @@ object Service {
     fun createMessage(recipientId: User.ID, message: Message) {
 
         if (users.any { it.id == recipientId } && users.any { it.id == message.ownerId }) {
-            val chat = chats.find { it.users == Pair(recipientId, message.ownerId)}?: Chat(Pair(recipientId, message.ownerId))//chats.getOrPut(Pair(recipientId, message.ownerId)) { mutableListOf() }
-            val possibleId = chats.size + 1
-            message.id = Message.ID(if(chat.messages.any { it.id.value == possibleId }) possibleId + 1 else possibleId)
+            val chat = Chat(Pair(recipientId, message.ownerId))
+            chats.getOrPut(chat.id){Chat(chat.users)}
             chat.messages += message
         } else throw WrongIdOfUserException
 
     }
 
-    fun deleteChat(chatId: Pair<User.ID, User.ID>) {
+    fun deleteChat(chatId: Chat.ID) {
         chats.remove(chatId)
     }
 
