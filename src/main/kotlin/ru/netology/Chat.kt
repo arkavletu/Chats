@@ -2,10 +2,10 @@ package ru.netology
 
 import java.util.*
 
-data class Chat (
+data class Chat(
     val users: Pair<User.ID, User.ID>,
-    var id: ID = ID()
-){
+    var id: ID = ID(),
+) {
     val messages: MutableList<Message> = mutableListOf()
 
     @JvmInline

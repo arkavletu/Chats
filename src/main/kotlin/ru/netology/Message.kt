@@ -8,8 +8,8 @@ data class Message(
     val text: String,
     val time: LocalDateTime = LocalDateTime.now(),
     var read: Boolean = false,
-    var id: ID = ID()
-    ) {
+    var id: ID = ID(),
+) {
 
 
     @JvmInline
