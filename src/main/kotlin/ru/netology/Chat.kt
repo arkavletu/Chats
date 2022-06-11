@@ -9,5 +9,9 @@ data class Chat (
     val messages: MutableList<Message> = mutableListOf()
 
     @JvmInline
-    value class ID(val value: UUID = UUID.randomUUID())
+    value class ID(val value: UUID = UUID.randomUUID()) 
+
+    override fun toString(): String {
+        return "Chat $id\n${messages}"
+    }
 }

@@ -4,13 +4,17 @@ package ru.netology
 
 
 fun main(){
-    val userOnline = Service.newUser(1) // online for service
-    val user2 = Service.newUser(2)
-    val user3 = Service.newUser(3)
+    val user1 = Service.newUser()
+    val user2 = Service.newUser()
+    val user3 = Service.newUser()
+    val msg = Message(user1.id,"Hi")
+    val message = Message(user1.id, "nope")
+    println(msg.id.value.toString())
+    Service.createMessage(user2.id,msg)
+    Service.createMessage(user2.id,message)
 
-    Service.create(2,Message(1,"Hi"))
-    Service.create(1,Message(2,"HAU?"))
-    Service.create(3,Message(1,"I'm here"))
+    PrintService.printChat(user2.id,user1.id,msg.id,2)
+
 
 }
 

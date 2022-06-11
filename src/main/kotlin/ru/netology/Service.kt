@@ -21,24 +21,13 @@ object Service {
         return users.find { it.id == UserId }
     }
 
-//    fun createMessage(recipientId: Int, message: Message) {
-//        if (users.any { it.id.value == recipientId } && users.any { it.id == message.ownerId }) {
-//            chats.getOrPut(recipientId) { mutableListOf() }
-//            val chat = chats[recipientId] ?: throw WrongIdOfChatException
-//
-//            chat.add(message)
-//            message.id = createId(chat.size)
-//        } else throw WrongIdOfUserException
-//
-//    }
-
-
     fun createMessage(recipientId: User.ID, message: Message) {
-
         if (users.any { it.id == recipientId } && users.any { it.id == message.ownerId }) {
             val chat = Chat(Pair(recipientId, message.ownerId))
-            chats.getOrPut(chat.id){Chat(chat.users)}
-            chat.messages += message
+            //иначе второе сообщение в этот же чат не добавляется
+            val x = chats.values.find { it.users == Pair(recipientId, message.ownerId) }?.id ?: chat.id
+            val chatCreated = chats.getOrPut(x){chat}
+            chatCreated.messages += message
         } else throw WrongIdOfUserException
 
     }
@@ -48,43 +37,43 @@ object Service {
     }
 
 
-    fun getAllChats(userId: User.ID): Map<Pair<User.ID, User.ID>, MutableList<Message>> {
+    fun getAllChats(userId: User.ID): Map<Chat.ID, Chat> {
         val user = findUserById(userId) ?: throw WrongIdOfUserException
-        val userChats = chats.filter { it.key.first == userId || it.key.second == userId }
+        val userChats = chats.filterValues { it.users.first == userId || it.users.second == userId }
         return userChats
     }
 
     fun editMessage(recipientId: User.ID, authorId: User.ID, messageToEditId: Message.ID, messageNew: Message) {
         //сообщение полностью заменяется на новое, поэтому id старого отдельно
-        val key = Pair(recipientId, authorId)
-        val chat = chats[key] ?: throw WrongIdOfChatException
-        val oldMessage = chat.find { it.id == messageToEditId }
-        val messageIndex = chat.indexOf(oldMessage)
-        if (messageIndex >= 0) chat[messageIndex] = messageNew
+        val users = Pair(recipientId, authorId)
+        val chat = chats.values.find { it.users == users } ?: throw WrongIdOfChatException
+        val oldMessage = chat.messages.find { it.id == messageToEditId }
+        val messageIndex = chat.messages.indexOf(oldMessage)
+        if (messageIndex >= 0) chat.messages[messageIndex] = messageNew
     }
 
     fun deleteMessage( recipientId: User.ID, authorId: User.ID, messageId: Message.ID) {
-        val key = Pair(recipientId, authorId)
-        val chat = chats[key] ?: throw WrongIdOfChatException
-        val index = chat.indexOfFirst { it.id == messageId }
+        val users = Pair(recipientId, authorId)
+        val chat = chats.values.find { it.users == users } ?: throw WrongIdOfChatException
+        val index = chat.messages.indexOfFirst { it.id == messageId }
         if (index < 0) throw WrongIdOfMessageException
-        chat.removeAt(index)
-        if (chat.isEmpty()) deleteChat(key)
+        chat.messages.removeAt(index)
+        if (chat.messages.isEmpty()) deleteChat(chat.id)
 
     }
 
     fun getChat(recipientId: User.ID, authorId: User.ID, startMessageId: Message.ID, count: Int): MutableList<Message> {
         if (findUserById(recipientId) == null || findUserById(authorId) == null) throw WrongIdOfUserException
-        val key = Pair(recipientId, authorId)
-        val chat = chats[key] ?: throw WrongIdOfChatException
-        val startMessage = chat.find { it.id == startMessageId } ?: throw WrongIdOfMessageException
-        val startIndex = chat.indexOf(startMessage)
-        return chat.filter { chat.indexOf(it) >= startIndex }.take(count).onEach { it.read = true } as MutableList<Message>
+        val users = Pair(recipientId, authorId)
+        val chat = chats.values.find { it.users == users } ?: throw WrongIdOfChatException
+        val startMessage = chat.messages.find { it.id == startMessageId } ?: throw WrongIdOfMessageException
+        val startIndex = chat.messages.indexOf(startMessage)
+        return chat.messages.filter { chat.messages.indexOf(it) >= startIndex }.take(count).onEach { it.read = true } as MutableList<Message>
     }
 
     fun countUnreadChats(userId: User.ID): Int {
         val count: Int = if (users.any { it.id == userId })
-            getAllChats(userId).count { it.value.any { !it.read && it.ownerId != userId } }
+            getAllChats(userId).count { it.value.messages.any { !it.read && it.ownerId != userId } }
         else throw WrongIdOfUserException
         return count
     }
