@@ -37,7 +37,7 @@ internal class ChatTest {
         val message2 = Message(user2.id, "HRU?")
         Service.createMessage(user1.id,message)
         Service.createMessage(user1.id,message2)
-        val result = Service.getChat(user1.id,user2.id,message.id,3).size
+        val result = Service.getChat(user2.id,user1.id,message.id,3).size
         assertEquals(2, result)
     }
 
