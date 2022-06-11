@@ -50,8 +50,7 @@ object Service {
         val users = Pair(recipientId, authorId)
         val chat = chats.values.find { it.users == users || it.users == Pair(authorId, recipientId) }
             ?: throw WrongIdOfChatException
-        val oldMessage = chat.messages.find { it.id == messageToEditId }
-        val messageIndex = chat.messages.indexOf(oldMessage)
+        val messageIndex = chat.messages.indexOf(chat.messages.find { it.id == messageToEditId })
         if (messageIndex >= 0) chat.messages[messageIndex] = messageNew
     }
 
