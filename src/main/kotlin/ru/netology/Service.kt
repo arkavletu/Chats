@@ -25,7 +25,8 @@ object Service {
         if (users.any { it.id == recipientId } && users.any { it.id == message.ownerId }) {
             val chat = Chat(Pair(recipientId, message.ownerId))
             //иначе второе сообщение в этот же чат не добавляется
-            val x = chats.values.find { it.users == Pair(recipientId, message.ownerId) }?.id ?: chat.id
+            val x = chats.values.find { it.users == Pair(recipientId, message.ownerId) ||
+                    it.users == Pair(message.ownerId,recipientId)}?.id ?: chat.id
             val chatCreated = chats.getOrPut(x){chat}
             chatCreated.messages += message
         } else throw WrongIdOfUserException

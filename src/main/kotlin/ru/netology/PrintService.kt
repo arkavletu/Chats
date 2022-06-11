@@ -5,8 +5,8 @@ object PrintService {
     fun printAllChats(userId: User.ID){
         val chats = Service.getAllChats(userId)
         val result = StringBuilder()
-        for ((chatId, chat) in chats) {
-            result.append("$chatId, ${chat.messages.last()}")
+        for (chat in chats) {
+            result.append("${chat.value.users}, ${chat.value.messages.last()}")
         }
         println(result)
     }

@@ -8,12 +8,12 @@ fun main(){
     val user2 = Service.newUser()
     val user3 = Service.newUser()
     val msg = Message(user1.id,"Hi")
-    val message = Message(user1.id, "nope")
-    println(msg.id.value.toString())
+    val message = Message(user2.id, "nope")
+    //println(msg.id.value.toString())
     Service.createMessage(user2.id,msg)
-    Service.createMessage(user2.id,message)
+    Service.createMessage(user1.id,message)
 
-    PrintService.printChat(user2.id,user1.id,msg.id,2)
+    println(Service.getAllChats(user1.id))
 
 
 }
