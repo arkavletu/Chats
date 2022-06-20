@@ -49,13 +49,12 @@ object Service {
         return userChats
     }
 
-    fun editMessage(recipientId: User.ID, authorId: User.ID, messageToEditId: Message.ID, messageNew: Message) {
+    fun editMessage(recipientId: User.ID, authorId: User.ID, messageNew: Message) {
         //сообщение полностью заменяется на новое, поэтому id старого отдельно
         val chat = chats.values.find { it.recipientId == recipientId && it.authorId == authorId } ?: throw WrongIdOfChatException
-        //val key = chat.id
-        val oldMessage = chat.messages.find { it.id == messageToEditId }
+        val oldMessage = chat.messages.find { it.id == messageNew.id }?: throw WrongIdOfMessageException
         val messageIndex = chat.messages.indexOf(oldMessage)
-        if (messageIndex >= 0) chat.messages[messageIndex] = messageNew
+        if (messageIndex >= 0) chat.messages[messageIndex] = oldMessage.copy(text = messageNew.text)
     }
 
     fun deleteMessage( recipientId: User.ID, authorId: User.ID, messageId: Message.ID) {
@@ -68,13 +67,13 @@ object Service {
 
     }
 
-    fun getChat(recipientId: User.ID, authorId: User.ID, startMessageId: Message.ID, count: Int): MutableList<Message> {
+    fun getChat(recipientId: User.ID, authorId: User.ID, startMessageId: Message.ID, count: Int): Chat {
         if (findUserById(recipientId) == null || findUserById(authorId) == null) throw WrongIdOfUserException
         val chat = chats.values.find { it.recipientId == recipientId && it.authorId == authorId } ?: throw WrongIdOfChatException
-        //val key = chat.id
         val startMessage = chat.messages.find { it.id == startMessageId } ?: throw WrongIdOfMessageException
         val startIndex = chat.messages.indexOf(startMessage)
-        return chat.messages.filter { chat.messages.indexOf(it) >= startIndex }.take(count).onEach { it.read = true } as MutableList<Message>
+        val newChat = chat.copy(messages = chat.messages.filter { chat.messages.indexOf(it) >= startIndex }.take(count).onEach { it.read = true } as MutableList<Message>)
+        return newChat
     }
 
     fun countUnreadChats(userId: User.ID): Int {

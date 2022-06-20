@@ -3,9 +3,10 @@ package ru.netology
 data class Chat (
     val authorId: User.ID,
     val recipientId: User.ID,
-    val id: ID
+    val id: ID,
+    val messages: MutableList<Message> = mutableListOf()
    ){
-    val messages = mutableListOf<Message>()
+
 
     @JvmInline
     value class ID(val value: Int)
