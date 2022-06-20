@@ -1,14 +1,12 @@
 package ru.netology
-import java.util.*
-import java.util.UUID.randomUUID as UserId
 
 data class User(
-    val id: ID = ID(),
+    val id: ID,
 
 
     ) {
     @JvmInline
-    value class ID(val value: UUID = UserId())
+    value class ID(val value: Int)
 
     override fun toString(): String {
         return "user id $id"
