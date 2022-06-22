@@ -4,9 +4,10 @@ import java.time.LocalDateTime
 data class Message(
     val ownerId: User.ID, // от кого
     val text: String,
+    val id: ID,
     val time: LocalDateTime = LocalDateTime.now(),
-    var read: Boolean = false,
-    var id: ID
+    var read: Boolean = false
+
     ) {
 
 

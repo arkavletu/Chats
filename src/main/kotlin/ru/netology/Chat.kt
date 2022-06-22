@@ -12,6 +12,6 @@ data class Chat (
     value class ID(val value: Int)
 
     override fun toString(): String {
-        return messages.toString()
+        return "\n$authorId and $recipientId\n$messages"
     }
 }

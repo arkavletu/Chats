@@ -1,9 +1,9 @@
 package ru.netology
 
 object Service {
-    val chats: MutableMap<Chat.ID, Chat> = mutableMapOf()//сначала адресат, потом автор
+    val chats: MutableMap<Chat.ID, Chat> = mutableMapOf()
     val users: MutableList<User> = mutableListOf()
-    var nextId: Int = 0
+    var nextId: Int = 1
 
     fun newUser(): User {
         val user = User(User.ID(nextId++))
@@ -18,25 +18,16 @@ object Service {
     fun createMessage(recipientId: User.ID, message: Message) {
         if (users.any { it.id == recipientId } && users.any { it.id == message.ownerId }) {
             val chat = Chat(message.ownerId, recipientId, Chat.ID(nextId++))
-            //иначе второе сообщение в этот же чат не добавляется
+
             val x = chats.values.find {
-                it.authorId == message.ownerId ||
-                        it.recipientId == message.ownerId
-            }?.id ?: chat.id
+                it.authorId == message.ownerId && it.recipientId == recipientId ||
+                        it.recipientId == message.ownerId && it.authorId == recipientId
+            }?.id ?: chat.id//иначе ответное сообщение добавляется не в этот же чат
             val chatCreated = chats.getOrPut(x) { chat }
             chatCreated.messages += message
         } else throw WrongIdOfUserException
     }
 
-//    fun createMessage(recipientId: User.ID, message: Message) {
-//
-//        if (users.any { it.id == recipientId } && users.any { it.id == message.ownerId }) {
-//            val chat = Chat(message.ownerId,recipientId,Chat.ID(nextId++))
-//            val chat1 =  chats.getOrPut(chat.id) { chat }
-//            chat1.messages += message
-//        } else throw WrongIdOfUserException
-//
-//    }
 
     fun deleteChat(chatId: Chat.ID) {
         chats.remove(chatId)
@@ -50,7 +41,6 @@ object Service {
     }
 
     fun editMessage(recipientId: User.ID, authorId: User.ID, messageNew: Message) {
-        //сообщение полностью заменяется на новое, поэтому id старого отдельно
         val chat = chats.values.find { it.recipientId == recipientId && it.authorId == authorId } ?: throw WrongIdOfChatException
         val oldMessage = chat.messages.find { it.id == messageNew.id }?: throw WrongIdOfMessageException
         val messageIndex = chat.messages.indexOf(oldMessage)
@@ -72,7 +62,9 @@ object Service {
         val chat = chats.values.find { it.recipientId == recipientId && it.authorId == authorId } ?: throw WrongIdOfChatException
         val startMessage = chat.messages.find { it.id == startMessageId } ?: throw WrongIdOfMessageException
         val startIndex = chat.messages.indexOf(startMessage)
-        val newChat = chat.copy(messages = chat.messages.filter { chat.messages.indexOf(it) >= startIndex }.take(count).onEach { it.read = true } as MutableList<Message>)
+        val newChat = chat.copy(messages = chat.messages.filter { chat.messages.indexOf(it) >= startIndex }.
+        take(count).
+        onEach { it.read = true } as MutableList<Message>)// read не могу сделать val без доп кода, а хоца...
         return newChat
     }
 
