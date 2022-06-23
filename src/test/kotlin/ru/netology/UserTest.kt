@@ -13,15 +13,15 @@ internal class UserTest {
 
     @Test
     fun newUser() {
-        Service.newUser()
-        assertTrue(Service.users.isNotEmpty())
+        val user = Service.newUser()
+        assertNotNull(Service.findUserById(user.id))
     }
 
     @Test
     fun findById() {
         val user1 = Service.newUser()
         val result = Service.findUserById(user1.id)
-        assertNotNull(result)
+        assertTrue(result?.id == user1.id)
     }
 
     @Test

@@ -1,7 +1,6 @@
 package ru.netology
 
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertTrue
+import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
 
@@ -12,10 +11,28 @@ internal class ChatTest {
     }
 
     @Test
+    fun findChat(){
+        val user1 = Service.newUser()
+        val user2 = Service.newUser()
+        val message = Service.createMessage(user2.id, user1.id, "Hi")
+        val chat = Service.findChat(user1.id, user2.id)
+        assertNotNull(chat)
+    }
+
+    @Test
+    fun findChatNull(){
+        val user1 = Service.newUser()
+        val user2 = Service.newUser()
+        val message = Service.createMessage(user2.id, user1.id, "Hi")
+        val chat = Service.findChat(User.ID(7), user1.id)
+        assertNull(chat)
+    }
+
+    @Test
     fun getAllChats() {
         val user1 = Service.newUser()
         val user2 = Service.newUser()
-        Service.createMessage(user1.id,Message(user2.id,"Hi",Message.ID(Service.nextId++)))
+        val message = Service.createMessage(user2.id, user1.id, "Hi")
         assertTrue(Service.getAllChats(user1.id).isNotEmpty())
         assertTrue(Service.getAllChats(user2.id).isNotEmpty())
 
@@ -25,7 +42,7 @@ internal class ChatTest {
     fun getAllChatsException() {
         val user1 = Service.newUser()
         val user2 = Service.newUser()
-        Service.createMessage(user1.id,Message(user2.id,"Hi",Message.ID(Service.nextId++)))
+        val message = Service.createMessage(user2.id, user1.id, "Hi")
         Service.getAllChats(User.ID(6))
     }
 
@@ -33,10 +50,8 @@ internal class ChatTest {
     fun getChat() {
         val user1 = Service.newUser()
         val user2 = Service.newUser()
-        val message = Message(user2.id,"Hi",Message.ID(Service.nextId++))
-        val message2 = Message(user2.id, "HRU?",Message.ID(Service.nextId++))
-        Service.createMessage(user1.id,message)
-        Service.createMessage(user1.id,message2)
+        val message = Service.createMessage(user2.id, user1.id, "Hi")
+        val message2 = Service.createMessage(user2.id, user1.id,"HRU?")
         val result = Service.getChat(user1.id,user2.id,message.id,3).messages.size
         assertEquals(2, result)
     }
@@ -45,8 +60,7 @@ internal class ChatTest {
     fun getChatUserException() {
         val user1 = Service.newUser()
         val user2 = Service.newUser()
-        val message = Message(user2.id,"Hi",Message.ID(Service.nextId++))
-        Service.createMessage(user1.id,message)
+        val message = Service.createMessage(user2.id, user1.id, "Hi")
         Service.getChat(User.ID(9),user2.id,message.id,2)
     }
 
@@ -55,8 +69,8 @@ internal class ChatTest {
         val user1 = Service.newUser()
         val user2 = Service.newUser()
         val user3 = Service.newUser()
-        Service.createMessage(user1.id,Message(user2.id,"Hi",Message.ID(Service.nextId++)))
-        Service.createMessage(user2.id,Message(user1.id ,"Where R U?",Message.ID(Service.nextId++)))
+        val message = Service.createMessage(user2.id, user1.id, "Hi")
+        val message2 = Service.createMessage(user2.id, user1.id,"HRU?")
         Service.getChat(user3.id,user2.id, Message.ID(4),7)
     }
 
@@ -64,8 +78,8 @@ internal class ChatTest {
     fun getChatMessageException() {
         val user1 = Service.newUser()
         val user2 = Service.newUser()
-        Service.createMessage(user1.id,Message(user2.id,"Hi",Message.ID(Service.nextId++)))
-        Service.createMessage(user2.id,Message(user1.id ,"Where R U?",Message.ID(Service.nextId++)))
+        val message = Service.createMessage(user2.id, user1.id, "Hi")
+        val message2 = Service.createMessage(user2.id, user1.id,"HRU?")
         Service.getChat(user1.id,user2.id,Message.ID(22),1)
     }
 
@@ -73,7 +87,7 @@ internal class ChatTest {
     fun countNew() {
         val user1 = Service.newUser()
         val user2 = Service.newUser()
-        Service.createMessage(user1.id,Message(user2.id,"Hi",Message.ID(Service.nextId++)))
+        val message = Service.createMessage(user2.id, user1.id, "Hi")
         val resultForUser1 = Service.countUnreadChats(user1.id)
         val resultForUser2 = Service.countUnreadChats(user2.id)
         assertTrue(resultForUser1 == 1)
@@ -84,7 +98,7 @@ internal class ChatTest {
     fun countNewException(){
         val user1 = Service.newUser()
         val user2 = Service.newUser()
-        Service.createMessage(user1.id,Message(user2.id,"Hi",Message.ID(Service.nextId++)))
+        val message = Service.createMessage(user2.id, user1.id, "Hi")
         Service.countUnreadChats(User.ID(56))
     }
 

@@ -1,31 +1,38 @@
 package ru.netology
 
 object Service {
-    val chats: MutableMap<Chat.ID, Chat> = mutableMapOf()
-    val users: MutableList<User> = mutableListOf()
-    var nextId: Int = 1
+    private val chats: MutableMap<Chat.ID, Chat> = mutableMapOf()//есть желание key сделать не id - юзер будет искать собеседника
+    private val users: MutableList<User> = mutableListOf()
+    private var nextIdUser: Int = 1
+    private var nextIdChat: Int = 1
+    private var nextIdMessage: Int = 1// нехай будет сквозная, мало ли попадет в другой чат, хоть найдется
 
     fun newUser(): User {
-        val user = User(User.ID(nextId++))
+        val user = User(User.ID(nextIdUser++))
         users += user
         return user
     }
 
-    fun findUserById(UserId: User.ID): User? {
-        return users.find { it.id == UserId }
+    fun findUserById(userId: User.ID): User? {
+        return users.find { it.id == userId }
     }
 
-    fun createMessage(recipientId: User.ID, message: Message) {
-        if (users.any { it.id == recipientId } && users.any { it.id == message.ownerId }) {
-            val chat = Chat(message.ownerId, recipientId, Chat.ID(nextId++))
+    fun findChat(authorId: User.ID, recipientId: User.ID): Chat? {
+        return chats.values.find {
+            it.authorId == authorId && it.recipientId == recipientId ||
+                    it.recipientId == authorId && it.authorId == recipientId
+        }
+    }
 
-            val x = chats.values.find {
-                it.authorId == message.ownerId && it.recipientId == recipientId ||
-                        it.recipientId == message.ownerId && it.authorId == recipientId
-            }?.id ?: chat.id//иначе ответное сообщение добавляется не в этот же чат
-            val chatCreated = chats.getOrPut(x) { chat }
+    fun createMessage(authorId: User.ID, recipientId: User.ID, text: String): Message {
+        val message = Message(authorId,text,Message.ID(nextIdMessage++))
+        if (users.any { it.id == recipientId } && users.any { it.id == authorId }) {
+            val chat = Chat(authorId, recipientId, Chat.ID(nextIdChat++))
+            val idOfChat = findChat(authorId, recipientId)?.id ?: chat.id
+            val chatCreated = chats.getOrPut(idOfChat) { chat }
             chatCreated.messages += message
         } else throw WrongIdOfUserException
+        return message
     }
 
 
@@ -34,21 +41,21 @@ object Service {
     }
 
 
-    fun getAllChats(userId: User.ID): Map<Chat.ID, Chat> {
+    fun getAllChats(userId: User.ID): List<Chat> {
         val user = findUserById(userId) ?: throw WrongIdOfUserException
-        val userChats = chats.filter { it.value.recipientId == userId || it.value.authorId == userId }
+        val userChats = chats.values.filter { it.recipientId == userId || it.authorId == userId }
         return userChats
     }
 
     fun editMessage(recipientId: User.ID, authorId: User.ID, messageNew: Message) {
-        val chat = chats.values.find { it.recipientId == recipientId && it.authorId == authorId } ?: throw WrongIdOfChatException
+        val chat = findChat(authorId, recipientId) ?: throw WrongIdOfChatException
         val oldMessage = chat.messages.find { it.id == messageNew.id }?: throw WrongIdOfMessageException
         val messageIndex = chat.messages.indexOf(oldMessage)
         if (messageIndex >= 0) chat.messages[messageIndex] = oldMessage.copy(text = messageNew.text)
     }
 
     fun deleteMessage( recipientId: User.ID, authorId: User.ID, messageId: Message.ID) {
-        val chat = chats.values.find { it.recipientId == recipientId && it.authorId == authorId } ?: throw WrongIdOfChatException
+        val chat = findChat(authorId, recipientId) ?: throw WrongIdOfChatException
         val key = chat.id
         val index = chat.messages.indexOfFirst { it.id == messageId }
         if (index < 0) throw WrongIdOfMessageException
@@ -59,7 +66,7 @@ object Service {
 
     fun getChat(recipientId: User.ID, authorId: User.ID, startMessageId: Message.ID, count: Int): Chat {
         if (findUserById(recipientId) == null || findUserById(authorId) == null) throw WrongIdOfUserException
-        val chat = chats.values.find { it.recipientId == recipientId && it.authorId == authorId } ?: throw WrongIdOfChatException
+        val chat = findChat(authorId, recipientId) ?: throw WrongIdOfChatException
         val startMessage = chat.messages.find { it.id == startMessageId } ?: throw WrongIdOfMessageException
         val startIndex = chat.messages.indexOf(startMessage)
         val newChat = chat.copy(messages = chat.messages.filter { chat.messages.indexOf(it) >= startIndex }.
@@ -68,10 +75,8 @@ object Service {
         return newChat
     }
 
-    fun countUnreadChats(userId: User.ID): Int {
-        val count: Int = if (users.any { it.id == userId })
-            getAllChats(userId).count { it.value.messages.any { !it.read && it.ownerId != userId } }
-        else throw WrongIdOfUserException
+    fun countUnreadChats(userId: User.ID): Int {//а там условие в лямбде не кривое, часом?
+        val count: Int = getAllChats(userId).count { it.messages.any { !it.read && it.ownerId != userId } }
         return count
     }
 
