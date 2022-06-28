@@ -1,7 +1,7 @@
 package ru.netology
 
 object Service {
-    private val chats: MutableMap<Chat.ID, Chat> = mutableMapOf()//есть желание key сделать не id - юзер будет искать собеседника
+    private val chats: MutableMap<Chat.ID, Chat> = mutableMapOf()
     private val users: MutableList<User> = mutableListOf()
     private var nextIdUser: Int = 1
     private var nextIdChat: Int = 1
@@ -13,11 +13,16 @@ object Service {
         return user
     }
 
-    fun findUserById(userId: User.ID): User? {
+    fun findUserById(userId: User.ID): User? {// надо и на остальные сучности?
         return users.find { it.id == userId }
     }
 
-    fun findChat(authorId: User.ID, recipientId: User.ID): Chat? {
+    fun findMessageByText(text: String): List<Message> {//сообщения юзеру проще искать по тексту
+        return chats.values.asSequence().filter { it.messages.any { it.text.contains(text, ignoreCase = true) } }
+            .map { it.messages.filter { it.text.contains(text, ignoreCase = true) } }.flatten().toList()
+    }
+
+    fun findChat(authorId: User.ID, recipientId: User.ID): Chat? {// чат тоже я как юзер не буду искать по id
         return chats.values.find {
             it.authorId == authorId && it.recipientId == recipientId ||
                     it.recipientId == authorId && it.authorId == recipientId
@@ -64,15 +69,16 @@ object Service {
 
     }
 
+    // у меня тут сначала sublist и стоял вместо фильтра. Не включает последний индекс, если сообщение в чате 1,
+    // саблист превратится в сабзиро и выкинет исключение. Лишние проверки.
+   // slice зашел)
     fun getChat(recipientId: User.ID, authorId: User.ID, startMessageId: Message.ID, count: Int): Chat {
         if (findUserById(recipientId) == null || findUserById(authorId) == null) throw WrongIdOfUserException
         val chat = findChat(authorId, recipientId) ?: throw WrongIdOfChatException
         val startMessage = chat.messages.find { it.id == startMessageId } ?: throw WrongIdOfMessageException
         val startIndex = chat.messages.indexOf(startMessage)
-        val newChat = chat.copy(messages = chat.messages.filter { chat.messages.indexOf(it) >= startIndex }.
-        take(count).
-        onEach { it.read = true } as MutableList<Message>)// read не могу сделать val без доп кода, а хоца...
-        return newChat
+        return chat.copy(messages = chat.messages.slice ( startIndex..chat.messages.lastIndex ).take(count)
+            .onEach { it.read = true } as MutableList<Message>)
     }
 
     fun countUnreadChats(userId: User.ID): Int {//а там условие в лямбде не кривое, часом?

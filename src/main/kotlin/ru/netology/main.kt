@@ -12,8 +12,7 @@ fun main(){
     Service.createMessage(user3.id, user2.id,"HRU?")
     Service.createMessage(user1.id, user2.id,"I don't know U")
 
-    Service.editMessage(user2.id,user3.id,Message(user3.id,"I know U", id = Message.ID(5)))
-
+    PrintService.printChat(user2.id,user3.id,Message.ID(2),3)
 
 
 }

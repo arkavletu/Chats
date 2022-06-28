@@ -10,6 +10,23 @@ internal class MessageTest {
     fun start() {
         Service.clearSingleton()
     }
+    @Test
+    fun findMsg(){
+        val user1 = Service.newUser()
+        val user2 = Service.newUser()
+        val message = Service.createMessage(user2.id, user1.id, "Hi")
+        val result = Service.findMessageByText("hi")
+        assertTrue(result.contains(message))
+    }
+
+    @Test
+    fun findMsgEmpty(){
+        val user1 = Service.newUser()
+        val user2 = Service.newUser()
+        val message = Service.createMessage(user2.id, user1.id, "Hi")
+        val result = Service.findMessageByText("empty")
+        assertTrue(result.isEmpty())
+    }
 
     @Test
     fun createMessageAndChat() {
